@@ -26,6 +26,7 @@ dependencies = [
     "jupyter>=1.0.0",
     "notebook>=7.0.0",
     "torch>=2.0.0",
+    "plotly>=5.0.0",
 ]
 
 [project.optional-dependencies]

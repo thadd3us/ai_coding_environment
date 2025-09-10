@@ -1,8 +1,8 @@
 FROM ubuntu:24.04
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive  # Prevent apt-get from showing interactive prompts during build
+ENV PYTHONUNBUFFERED=1              # Force Python to print output immediately (don't buffer)
 ENV VENV_PATH="/venv"
 ENV PATH="$VENV_PATH/bin:$PATH"
 
