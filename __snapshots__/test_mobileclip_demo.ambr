@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_mobileclip_embeddings_and_similarity
+  dict({
+    'items': list([
+      'dog',
+      'cat',
+      'car',
+    ]),
+    'matrix_shape': tuple(
+      3,
+      3,
+    ),
+    'similarity_matrix': dict({
+      'car': dict({
+        'car': 1.0,
+        'cat': 0.999,
+        'dog': 0.999,
+      }),
+      'cat': dict({
+        'car': 0.999,
+        'cat': 1.0,
+        'dog': 0.999,
+      }),
+      'dog': dict({
+        'car': 0.999,
+        'cat': 0.999,
+        'dog': 1.0,
+      }),
+    }),
+  })
+# ---
