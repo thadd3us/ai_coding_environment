@@ -1,50 +1,63 @@
 FROM ubuntu:24.04
 
 # Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive  # Prevent apt-get from showing interactive prompts during build
-ENV PYTHONUNBUFFERED=1              # Force Python to print output immediately (don't buffer)
+
+# Force Python to print output immediately (don't buffer).
+ENV PYTHONUNBUFFERED=1
 ENV VENV_PATH="/venv"
 ENV PATH="$VENV_PATH/bin:$PATH"
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    curl \
-    git \
-    build-essential \
+RUN apt-get update
+RUN apt-get install -y \
     sudo \
+    less \
+    curl \
+    wget \
+    git \
+    jq \
+    build-essential \
+    ncdu
+
+RUN apt-get install -y \
     nodejs \
-    npm \
-    && rm -rf /var/lib/apt/lists/*
+    npm
 
 # Install uv
-RUN pip3 install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Create dev user
 RUN useradd -m -s /bin/bash -G sudo dev && \
     echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Create virtual environment
-RUN python3 -m venv $VENV_PATH && \
-    chown -R dev:dev $VENV_PATH
+# # Create virtual environment
+# RUN python3 -m venv $VENV_PATH && \
+#     chown -R dev:dev $VENV_PATH
 
 # Switch to dev user
 USER dev
 WORKDIR /home/dev
 
-# Install OpenAI Codex
+# Install OpenAI Codex.
 RUN sudo npm install -g @openai/codex
 
-# Copy project files
+# Copy project files and set up workspace.
+WORKDIR /home/dev/workspace
 COPY --chown=dev:dev pyproject.toml uv.lock ./
-
-# Install Python dependencies using uv
 RUN uv sync --all-packages
 
-# Set working directory
-WORKDIR /workspace
+# Set working directory.
+WORKDIR /home/dev/workspace
 
-# Default command
-CMD ["/bin/bash"]
+# Give ourselves some tools.
+COPY --chown=dev:dev docker/bin /home/dev/bin
+RUN chmod +x /home/dev/bin/*
+ENV PATH="/home/dev/bin:/home/dev/workspace/.venv/bin:$PATH"
+
+# Check that we have the right tools.
+RUN which python
+RUN which jupyter
+RUN which run_jupyter.sh
+
+# Default command when container is run.
+CMD ["bash"]
