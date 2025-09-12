@@ -30,13 +30,21 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN useradd -m -s /bin/bash -G sudo dev && \
     echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# # Create virtual environment
-# RUN python3 -m venv $VENV_PATH && \
-#     chown -R dev:dev $VENV_PATH
-
 # Switch to dev user
 USER dev
 WORKDIR /home/dev
+
+# Install OpenVSCode Server.
+ENV OPENVSCODE_SERVER_ROOT="/home/dev/openvscode-server"
+RUN curl -fsSL https://github.com/gitpod-io/openvscode-server/releases/download/openvscode-server-v1.103.1/openvscode-server-v1.103.1-linux-arm64.tar.gz | tar xzv
+RUN mv openvscode-server-* ${OPENVSCODE_SERVER_ROOT}
+ENV PATH="${OPENVSCODE_SERVER_ROOT}/bin:$PATH"
+RUN openvscode-server --install-extension ms-python.python
+RUN openvscode-server --install-extension ms-toolsai.jupyter
+RUN openvscode-server --install-extension charliermarsh.ruff
+RUN openvscode-server --install-extension openai.chatgpt
+# RUN openvscode-server --install-extension letmaik.git-tree-compare
+# RUN openvscode-server --install-extension ms-toolsai.datawrangler
 
 # Install OpenAI Codex.
 RUN sudo npm install -g @openai/codex
@@ -54,6 +62,7 @@ COPY --chown=dev:dev docker/bin /home/dev/bin
 RUN chmod +x /home/dev/bin/*
 ENV PATH="/home/dev/bin:/home/dev/workspace/.venv/bin:$PATH"
 
+USER dev
 # Check that we have the right tools.
 RUN which python
 RUN which jupyter
