@@ -20,6 +20,7 @@ dependencies = [
     "pillow>=9.0.0",
     "requests>=2.28.0",
     "open-clip-torch>=2.20.0",
+    "huggingface-hub>=0.20.0",
 ]
 
 [project.optional-dependencies]

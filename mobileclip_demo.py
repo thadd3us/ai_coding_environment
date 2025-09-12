@@ -19,8 +19,15 @@ import io
 
 def setup_model():
     """Initialize MobileCLIP model and transforms from open_clip."""
+    # Option 1: Use open_clip with built-in model (current approach)
     model, _, preprocess = open_clip.create_model_and_transforms('MobileCLIP-S1')
     tokenizer = open_clip.get_tokenizer('MobileCLIP-S1')
+    
+    # Option 2: For custom models, you can download from HF Hub like this:
+    # from huggingface_hub import hf_hub_download
+    # model_path = hf_hub_download(repo_id="apple/MobileCLIP-S0", filename="mobileclip_s0.pt")
+    # Then load with torch.load(model_path) and create custom model
+    
     return model, preprocess, tokenizer
 
 
