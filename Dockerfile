@@ -26,7 +26,7 @@ RUN apt-get install -y \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Create dev user
+# Create dev user that can sudo.
 RUN useradd -m -s /bin/bash -G sudo dev && \
     echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
@@ -43,30 +43,48 @@ RUN openvscode-server --install-extension ms-python.python
 RUN openvscode-server --install-extension ms-toolsai.jupyter
 RUN openvscode-server --install-extension charliermarsh.ruff
 RUN openvscode-server --install-extension openai.chatgpt
+RUN openvscode-server --install-extension cab404.vscode-direnv
+# These don't seem to be published in the place where openvscode-server looks.
 # RUN openvscode-server --install-extension letmaik.git-tree-compare
 # RUN openvscode-server --install-extension ms-toolsai.datawrangler
 
+# Make some python venv with some useful things.  Won't necessarily be the venv for our project, though.
+# Might pre-warm uv's cache, but version pins are likely different across projects.
+RUN uv venv /home/dev/venv
+ENV VIRTUAL_ENV="/home/dev/venv"
+ENV PATH="/${VIRTUAL_ENV}/bin:$PATH"
+COPY --chown=dev:dev pyproject.toml uv.lock /home/dev/dummy_project/
+RUN cd /home/dev/dummy_project/ && uv sync --all-packages --active
+
+# Install Claude Code.
+RUN curl -fsSL https://claude.ai/install.sh | bash
+ENV PATH="/home/dev/.local/bin:$PATH"
+COPY --chown=dev:dev .claude_anthropic_key.sh /home/dev/.claude/anthropic_key.sh
+COPY --chown=dev:dev .claude_settings.json /home/dev/.claude/settings.json
+RUN chmod +x /home/dev/.claude/anthropic_key.sh
+
 # Install OpenAI Codex.
 RUN sudo npm install -g @openai/codex
+# Set the preferred auth method to apikey.
+COPY --chown=dev:dev codex_config.toml /home/dev/.codex/config.toml
 
-# Copy project files and set up workspace.
-WORKDIR /home/dev/workspace
-COPY --chown=dev:dev pyproject.toml uv.lock ./
-RUN uv sync --all-packages
-
-# Set working directory.
-WORKDIR /home/dev/workspace
 
 # Give ourselves some tools.
 COPY --chown=dev:dev docker/bin /home/dev/bin
 RUN chmod +x /home/dev/bin/*
-ENV PATH="/home/dev/bin:/home/dev/workspace/.venv/bin:$PATH"
+ENV PATH="/home/dev/bin:$PATH"
+
+# Install direnv.
+RUN curl -sfL https://direnv.net/install.sh | bash
+RUN echo 'eval "$(direnv hook bash)"' >> /home/dev/.bashrc
 
 USER dev
 # Check that we have the right tools.
 RUN which python
-RUN which jupyter
-RUN which run_jupyter.sh
+RUN which codex
+RUN which openvscode-server
 
+# Default working directory when container is run.
+WORKDIR /workspace
 # Default command when container is run.
 CMD ["bash"]

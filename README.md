@@ -1,42 +1,28 @@
 # ai_coding_demo
 
-## Build this container
+## Start a container with bash
 ```sh
-docker build -t ai_coding_demo .
-```
-
-```sh
-docker build . -t ghcr.io/thadd3us/ai_coding_demo:latest --push
-```
-
-## Start a container with shared data running bash
-```sh
-docker run \
-    --mount type=bind,source=${HOME}/src/Strain_library_paper,target=/shared_data \
-    -it \
+docker run -it \
+    -v $(pwd):/workspace \
     -e OPENAI_API_KEY=${OPENAI_API_KEY} \
-    ai_coding_demo \
-    bash
+    ai_coding_demo
 ```
 
 ## Start a container with shared data VSCode Server
 ```sh
-docker run \
-    --mount type=bind,source=${HOME}/src/Strain_library_paper,target=/shared_data \
-    -it \
+docker run -it \
+    -v $(pwd):/workspace \
+    -p 127.0.0.1:3000:3000 \
+    ghcr.io/thadd3us/ai_coding_environment \
+    run_vscode.sh /workspace
+
+docker run -it \
+    -v $(pwd):/workspace \
     -e OPENAI_API_KEY=${OPENAI_API_KEY} \
     -p 3000:3000 \
     ai_coding_demo \
-    run_vscode.sh /shared_data
+    run_vscode.sh /workspace
 ```
-
-
-## Docker login
-```
-echo $GHCR_PUSH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
-```
-
-
 
 
 ## Start a container with shared data running a jupyter server
@@ -48,5 +34,18 @@ docker run \
     run_jupyter.sh /shared_data
 ```
 
+# Publishing
 
-* https://platform.openai.com/settings/organization/usage
+## Docker login
+```
+echo $GHCR_PUSH_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+```
+
+## Build this container
+```sh
+docker build -t ai_coding_demo .
+```
+
+```sh
+docker build . -t ghcr.io/thadd3us/ai_coding_environment:latest --push
+```

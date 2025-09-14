@@ -1,0 +1,4 @@
+{
+    "apiKeyHelper": "~/anthropic_key.sh",
+    "forceLoginMethod": "console"
+}
